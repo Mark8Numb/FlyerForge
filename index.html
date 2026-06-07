@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>СТРОИТЕЛЬ.ПРО — Конструктор листовок A4 (QR + фон)</title>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Строитель.Про%20A4%22,%22short_name%22:%22СтройПро%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%231e6f5c%22,%22icons%22:[{%22src%22:%22https://via.placeholder.com/192x192?text=SP%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;600;700&family=Roboto:wght@400;500;700&family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode-generator.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #eef2f5;
+            color: #1a2c3e;
+            padding: 20px 16px;
+        }
+        .install-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1e6f5c;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 12px 20px;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+            justify-content: center;
+        }
+        .controls {
+            flex: 1.2;
+            min-width: 300px;
+            background: white;
+            border-radius: 32px;
+            padding: 22px 20px;
+            box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+            height: fit-content;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .controls h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #1e6f5c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .controls p { font-size: 0.75rem; color: #5f6c7a; margin-bottom: 20px; border-left: 3px solid #1e6f5c; padding-left: 12px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.85rem; color: #1e2f3e; }
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cfdfed;
+            border-radius: 20px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .color-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .color-row input { flex: 1; height: 44px; }
+        .slider-row { display: flex; align-items: center; gap: 12px; flex:1; }
+        .file-upload {
+            border: 2px dashed #bdd4e8;
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        .file-upload.small { padding: 8px; font-size: 0.8rem; }
+        .logo-preview, .qr-preview, .bg-preview {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .logo-preview img, .qr-preview img, .bg-preview img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2edf7;
+            padding: 4px;
+        }
+        .qr-preview img { width: 70px; height: 70px; }
+        button.secondary {
+            background: #ecf3f9;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        button.print-btn {
+            background: #1e2f3e;
+            color: white;
+            width: 100%;
+            border: none;
+            padding: 12px;
+            border-radius: 40px;
+            font-weight: 700;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .template-btn {
+            background: #eef2f5;
+            border: 1px solid #cbdde9;
+            border-radius: 40px;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .template-btn.active { background: #1e6f5c; color: white; border-color: #1e6f5c; }
+        .preview-area { flex: 1.8; min-width: 360px; background: #eef2f5; display: flex; justify-content: center; }
+        .a4-sheet {
+            width: 210mm;
+            background: white;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.3);
+            border-radius: 6px;
+            overflow: hidden;
+            min-height: 297mm;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        /* Фоновое изображение с прозрачностью */
+        .bg-image-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: var(--bg-size, cover);
+            background-position: var(--bg-position, center);
+            background-repeat: no-repeat;
+            opacity: var(--bg-opacity, 0.3);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ad-content {
+            padding: 12mm 14mm;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 2;
+            background-color: var(--content-bg, rgba(255,255,255,0.95));
+        }
+        .logo-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+        .brand-logo { max-height: 85px; max-width: 180px; object-fit: contain; }
+        .qr-wrapper { text-align: center; }
+        .qr-wrapper canvas, .custom-qr-img { width: 85px; height: 85px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); object-fit: contain; }
+        .features-list { list-style: none; padding-left: 0; margin: 8px 0; }
+        .features-list li { margin-bottom: 8px; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+        .features-list i { width: 22px; color: var(--accent); }
+        .headline { font-size: 1.8rem; font-weight: 800; line-height: 1.2; color: var(--accent); margin-bottom: 8px; }
+        .description { font-size: 1rem; line-height: 1.45; margin-bottom: 8px; }
+        .offer { background: rgba(30,111,92,0.1); padding: 10px 18px; border-radius: 28px; font-weight: 600; width: fit-content; }
+        .cta-section { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+        .btn-cta { background: var(--accent); color: white; border: none; padding: 10px 28px; border-radius: 60px; font-weight: bold; text-decoration: none; display: inline-block; font-size: 0.9rem; }
+        .footer-note { margin-top: auto; font-size: 0.7rem; text-align: center; border-top: 1px dashed #cbdde9; padding-top: 12px; color: #5f7d95; }
+        hr { margin: 12px 0; }
+        @media print {
+            body { background: white; padding: 0; }
+            .controls, .install-btn, .print-btn { display: none !important; }
+            .a4-sheet { box-shadow: none; margin: 0 auto; width: 100%; }
+            .bg-image-layer { opacity: var(--bg-opacity, 0.3) !important; }
+        }
+        @media (max-width: 750px) { .a4-sheet { transform: scale(0.95); transform-origin: top center; } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="controls">
+        <h2><i class="fas fa-hard-hat"></i> СТРОИТЕЛЬ.ПРО <span style="font-size:0.7rem;">+ QR + ФОН</span></h2>
+        <p>📄 Шаблоны • Свой QR-код • Фоновое изображение • Прозрачность • Печать A4</p>
+        
+        <!-- Шаблоны -->
+        <div class="input-group">
+            <label><i class="fas fa-cubes"></i> 📁 Шаблон (быстрый старт)</label>
+            <div class="template-buttons" id="templateButtons">
+                <button data-template="0" class="template-btn active">Стройка. Цифры.</button>
+                <button data-template="1" class="template-btn">Калькулятор?</button>
+                <button data-template="2" class="template-btn">Умный учёт</button>
+                <button data-template="3" class="template-btn">Простой учёт</button>
+            </div>
+        </div>
+
+        <!-- Логотип -->
+        <div class="input-group">
+            <label><i class="fas fa-image"></i> 🖼️ Логотип компании</label>
+            <div class="file-upload" id="logoUploadTrigger">
+                <i class="fas fa-cloud-upload-alt"></i> Загрузить логотип
+                <input type="file" id="logoInput" accept="image/*" style="display: none;">
+            </div>
+            <div class="logo-preview">
+                <img id="logoPreviewImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231e6f5c' rx='22'/%3E%3Ctext x='50' y='67' font-size='48' text-anchor='middle' fill='white' font-family='Arial'%3EСП%3C/text%3E%3C/svg%3E">
+                <button class="secondary" id="resetLogoBtn">Сбросить</button>
+            </div>
+        </div>
+
+        <!-- QR-код: ДВА ВАРИАНТА -->
+        <div class="input-group">
+            <label><i class="fas fa-qrcode"></i> 📱 QR-код (выберите способ)</label>
+            <select id="qrModeSelect">
+                <option value="generate">🔘 Сгенерировать по ссылке</option>
+                <option value="upload">🖼️ Загрузить свой QR-код (изображение)</option>
+            </select>
+        </div>
+        <div id="qrGenerateBlock">
+            <input type="url" id="qrUrlInput" value="https://stroipro.ru/start" placeholder="https://ваш-сайт.ru">
+        </div>
+        <div id="qrUploadBlock" style="display:none;">
+            <div class="file-upload small" id="qrUploadTrigger">
+                <i class="fas fa-file-image"></i> Загрузить картинку QR-кода
+                <input type="file" id="qrImageInput" accept="image/*" style="display: none;">
+            </div>
+            <div class="qr-preview" id="qrPreviewContainer">
+                <img id="customQrPreview" style="display:none;">
+                <button class="secondary" id="resetQrBtn" style="display:none;">Сбросить QR</button>
+            </div>
+        </div>
+
+        <!-- Фоновое изображение -->
+        <div class="input-group">
+            <label><i class="fas fa-panorama"></i> 🌄 Фоновое изображение (водяной знак)</label>
+            <div class="file-upload small" id="bgUploadTrigger">
+                <i class="fas fa-cloud-upload-alt"></i> Загрузить фон (JPG/PNG)
+                <input type="file" id="bgImageInput" accept="image/*" style="display: none;">
+            </div>
+            <div class="bg-preview">
+                <img id="bgPreviewImg" style="display:none; width:80px; height:60px; object-fit:cover;">
+                <button class="secondary" id="resetBgBtn" style="display:none;">Убрать фон</button>
+            </div>
+            <div class="slider-row" style="margin-top:10px;">
+                <span>Прозрачность фона:</span>
+                <input type="range" id="bgImageOpacity" min="0" max="1" step="0.01" value="0.2">
+                <span id="bgOpacityVal">20%</span>
+            </div>
+            <div class="color-row" style="margin-top:8px;">
+                <span>Размер фона:</span>
+                <select id="bgSizeSelect">
+                    <option value="cover">На весь лист (cover)</option>
+                    <option value="contain">Вписать (contain)</option>
+                    <option value="auto">Оригинал (auto)</option>
+                </select>
+            </div>
+            <div class="color-row">
+                <span>Позиция:</span>
+                <select id="bgPositionSelect">
+                    <option value="center">Центр</option>
+                    <option value="top">Верх</option>
+                    <option value="bottom">Низ</option>
+                    <option value="left">Лево</option>
+                    <option value="right">Право</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Тексты -->
+        <div class="input-group">
+            <label><i class="fas fa-heading"></i> Заголовок</label>
+            <input type="text" id="headlineInput" value="Стройка. Цифры. Контроль.">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-paragraph"></i> Описание</label>
+            <textarea id="descInput" rows="2">Всё остальное — лишнее. Журнал за 10 секунд, склад в пачках, задачи с подсветкой.</textarea>
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-list"></i> Преимущества (каждая с новой строки)</label>
+            <textarea id="featuresInput" rows="3">📋 Журнал — 10 секунд на запись\n📦 Склад — остатки в пачках\n✅ Задачи — просроченные подсветит\n💰 Заработок — считает сам</textarea>
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-tag"></i> Спецпредложение</label>
+            <input type="text" id="offerInput" value="🆓 Бесплатно — 50 первых записей">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-hand-pointer"></i> Кнопка и ссылка</label>
+            <input type="text" id="ctaTextInput" value="Попробовать бесплатно">
+            <input type="url" id="ctaLinkInput" value="https://stroipro.ru" style="margin-top:6px;">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-comment"></i> Нижний колонтитул</label>
+            <input type="text" id="footerInput" value="Сканируйте QR — добавляйте на экран">
+        </div>
+
+        <!-- Расположение и цвета -->
+        <div class="input-group">
+            <label><i class="fas fa-arrows-alt"></i> Расположение логотипа и QR</label>
+            <select id="layoutSelect"><option value="left-right">Лого слева, QR справа</option><option value="right-left">Лого справа, QR слева</option><option value="center-center">Оба по центру</option></select>
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-align-left"></i> Выравнивание заголовка</label>
+            <select id="headlineAlign"><option value="left">Слева</option><option value="center">Центр</option><option value="right">Справа</option></select>
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-palette"></i> Цвет акцента</label>
+            <input type="color" id="accentColor" value="#1e6f5c">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-fill-drip"></i> Прозрачность подложки текста</label>
+            <div class="slider-row">
+                <span>Фон контента:</span>
+                <input type="range" id="contentBgOpacity" min="0" max="1" step="0.01" value="0.95">
+                <span id="contentBgVal">95%</span>
+            </div>
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-font"></i> Шрифт</label>
+            <select id="fontSelect"><option value="'Inter', sans-serif">Inter</option><option value="'Roboto', sans-serif">Roboto</option><option value="'Montserrat', sans-serif">Montserrat</option></select>
+        </div>
+
+        <button class="print-btn" id="printButton"><i class="fas fa-print"></i> 🖨️ Распечатать A4 / PDF</button>
+        <button class="secondary" id="resetAllBtn" style="width:100%; margin-top:12px;">↺ Сбросить к шаблону</button>
+    </div>
+
+    <!-- Превью A4 -->
+    <div class="preview-area">
+        <div class="a4-sheet" id="a4Sheet">
+            <div class="bg-image-layer" id="bgImageLayer"></div>
+            <div class="ad-content" id="adContent">
+                <div class="logo-header" id="logoHeader">
+                    <img class="brand-logo" id="dynamicLogo" alt="Логотип" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231e6f5c' rx='22'/%3E%3Ctext x='50' y='67' font-size='48' text-anchor='middle' fill='white'%3EСП%3C/text%3E%3C/svg%3E">
+                    <div class="qr-wrapper" id="qrWrapper">
+                        <canvas id="qrCanvas" width="100" height="100"></canvas>
+                        <img id="customQrDisplay" class="custom-qr-img" style="display:none;">
+                        <span>СКАНИРУЙ</span>
+                    </div>
+                </div>
+                <div class="headline" id="dynamicHeadline">Стройка. Цифры. Контроль.</div>
+                <div class="description" id="dynamicDesc"></div>
+                <ul class="features-list" id="dynamicFeatures"></ul>
+                <div class="offer" id="dynamicOffer"></div>
+                <div class="cta-section" id="ctaSection">
+                    <a href="#" class="btn-cta" id="dynamicCtaBtn" target="_blank">Попробовать</a>
+                </div>
+                <div class="footer-note" id="dynamicFooter"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<button class="install-btn" id="installPwaBtn"><i class="fab fa-chrome"></i> Установить приложение</button>
+
+<script>
+    // ---------- ШАБЛОНЫ ----------
+    const templates = [
+        { headline:"Стройка. Цифры. Контроль.", desc:"Всё остальное — лишнее.", features:["📋 Журнал — 10 секунд","📦 Склад — пачки и метры","✅ Задачи с подсветкой","💰 Заработок сам считает"], offer:"⚡ Без интернета • Бесплатно 50 записей", ctaText:"Начать", footer:"Сканируйте QR — добавьте на экран" },
+        { headline:"Ещё считаете на калькуляторе?", desc:"Записываете в блокнот? Пора переходить!", features:["➕ Складывает м²","💰 Умножает на цену","📦 Вычитает материалы","📊 Рисует графики"], offer:"Первый месяц — 0 ₽ • Работает офлайн", ctaText:"Попробовать", footer:"Новое уже здесь. СТРОИТЕЛЬ.ПРО" },
+        { headline:"Умный учёт для прораба", desc:"Всё в телефоне: учёт, склад, задачи", features:["📋 Журнал работ","📦 Склад материалов","✅ Контроль задач","💰 Расчёт прибыли"], offer:"Бесплатно до 50 записей", ctaText:"Скачать", footer:"Вы быстрее считаете, чем бригада пьёт чай" },
+        { headline:"Простой учёт стройки", desc:"Который не бесит. Журнал, склад, задачи, налоги.", features:["📋 Журнал — 10 секунд","📦 Склад в штуках и метрах","✅ Подсветка просрочек","💰 Заработок + налоги"], offer:"🔥 Без регистрации • Первые 50 бесплатно", ctaText:"Установить", footer:"Добавьте на главный экран за минуту" }
+    ];
+
+    // DOM элементы
+    const logoInput = document.getElementById('logoInput');
+    const logoPreview = document.getElementById('logoPreviewImg');
+    const dynamicLogo = document.getElementById('dynamicLogo');
+    const resetLogoBtn = document.getElementById('resetLogoBtn');
+    const qrModeSelect = document.getElementById('qrModeSelect');
+    const qrGenerateBlock = document.getElementById('qrGenerateBlock');
+    const qrUploadBlock = document.getElementById('qrUploadBlock');
+    const qrUrlInput = document.getElementById('qrUrlInput');
+    const qrImageInput = document.getElementById('qrImageInput');
+    const customQrPreview = document.getElementById('customQrPreview');
+    const customQrDisplay = document.getElementById('customQrDisplay');
+    const resetQrBtn = document.getElementById('resetQrBtn');
+    const qrCanvas = document.getElementById('qrCanvas');
+    const bgImageInput = document.getElementById('bgImageInput');
+    const bgPreviewImg = document.getElementById('bgPreviewImg');
+    const resetBgBtn = document.getElementById('resetBgBtn');
+    const bgImageOpacity = document.getElementById('bgImageOpacity');
+    const bgOpacityVal = document.getElementById('bgOpacityVal');
+    const bgSizeSelect = document.getElementById('bgSizeSelect');
+    const bgPositionSelect = document.getElementById('bgPositionSelect');
+    const bgImageLayer = document.getElementById('bgImageLayer');
+    const contentBgOpacity = document.getElementById('contentBgOpacity');
+    const contentBgVal = document.getElementById('contentBgVal');
+    const headlineInput = document.getElementById('headlineInput');
+    const descInput = document.getElementById('descInput');
+    const featuresInput = document.getElementById('featuresInput');
+    const offerInput = document.getElementById('offerInput');
+    const ctaTextInput = document.getElementById('ctaTextInput');
+    const ctaLinkInput = document.getElementById('ctaLinkInput');
+    const footerInput = document.getElementById('footerInput');
+    const accentColor = document.getElementById('accentColor');
+    const fontSelect = document.getElementById('fontSelect');
+    const layoutSelect = document.getElementById('layoutSelect');
+    const headlineAlign = document.getElementById('headlineAlign');
+    const dynamicHeadline = document.getElementById('dynamicHeadline');
+    const dynamicDesc = document.getElementById('dynamicDesc');
+    const dynamicFeatures = document.getElementById('dynamicFeatures');
+    const dynamicOffer = document.getElementById('dynamicOffer');
+    const dynamicCtaBtn = document.getElementById('dynamicCtaBtn');
+    const dynamicFooter = document.getElementById('dynamicFooter');
+    const adContentDiv = document.getElementById('adContent');
+    const logoHeader = document.getElementById('logoHeader');
+    const ctaSection = document.getElementById('ctaSection');
+    const templateBtns = document.querySelectorAll('.template-btn');
+    const resetAllBtn = document.getElementById('resetAllBtn');
+    const printBtn = document.getElementById('printButton');
+
+    let currentTemplate = 0;
+    let customQrDataUrl = null;
+    let backgroundImageUrl = null;
+    const defaultLogo = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%231e6f5c' rx='22'/%3E%3Ctext x='50' y='67' font-size='48' text-anchor='middle' fill='white'%3EСП%3C/text%3E%3C/svg%3E";
+
+    function applyTemplate(idx) {
+        const t = templates[idx];
+        headlineInput.value = t.headline;
+        descInput.value = t.desc;
+        featuresInput.value = t.features.join('\n');
+        offerInput.value = t.offer;
+        ctaTextInput.value = t.ctaText;
+        footerInput.value = t.footer;
+        refreshAll();
+    }
+
+    function updateFeaturesList() {
+        const lines = featuresInput.value.split('\n').filter(l => l.trim());
+        dynamicFeatures.innerHTML = lines.map(l => `<li><i class="fas fa-check-circle"></i> ${l.trim()}</li>`).join('');
+    }
+
+    // Генерация QR или показ загруженного
+    function generateQRCode(url) {
+        if(!url) url = "https://stroipro.ru";
+        if(!url.startsWith('http')) url = 'https://'+url;
+        const qr = qrcodeGenerator(0, 'M');
+        qr.addData(url);
+        qr.make();
+        const cellSize = 4;
+        const margin = 2;
+        const size = qr.getModuleCount() * cellSize + margin * 2;
+        qrCanvas.width = size;
+        qrCanvas.height = size;
+        const ctx = qrCanvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = '#1F2937';
+        for(let row=0; row<qr.getModuleCount(); row++) {
+            for(let col=0; col<qr.getModuleCount(); col++) {
+                if(qr.isDark(row, col)) ctx.fillRect(col*cellSize+margin, row*cellSize+margin, cellSize, cellSize);
+            }
+        }
+        qrCanvas.style.borderRadius = '12px';
+    }
+
+    function refreshQR() {
+        const mode = qrModeSelect.value;
+        if(mode === 'upload' && customQrDataUrl) {
+            qrCanvas.style.display = 'none';
+            customQrDisplay.style.display = 'block';
+            customQrDisplay.src = customQrDataUrl;
+        } else {
+            qrCanvas.style.display = 'block';
+            customQrDisplay.style.display = 'none';
+            let url = qrUrlInput.value.trim();
+            if(!url) url = "https://stroipro.ru";
+            generateQRCode(url);
+        }
+    }
+
+    // Фон изображения
+    function updateBackgroundImage() {
+        if(backgroundImageUrl) {
+            bgImageLayer.style.backgroundImage = `url(${backgroundImageUrl})`;
+            bgImageLayer.style.backgroundSize = bgSizeSelect.value;
+            let pos = bgPositionSelect.value;
+            bgImageLayer.style.backgroundPosition = pos === 'center' ? 'center' : pos;
+            bgImageLayer.style.backgroundRepeat = 'no-repeat';
+            bgImageLayer.style.opacity = bgImageOpacity.value;
+            bgOpacityVal.innerText = Math.round(bgImageOpacity.value * 100) + '%';
+            bgImageLayer.style.display = 'block';
+        } else {
+            bgImageLayer.style.backgroundImage = 'none';
+            bgImageLayer.style.display = 'none';
+        }
+    }
+
+    function updateContentBgOpacity() {
+        const opacity = parseFloat(contentBgOpacity.value);
+        contentBgVal.innerText = Math.round(opacity * 100) + '%';
+        adContentDiv.style.backgroundColor = `rgba(255, 255, 255, ${opacity})`;
+    }
+
+    function updateColorsAndStyles() {
+        const accent = accentColor.value;
+        adContentDiv.style.setProperty('--accent', accent);
+        dynamicHeadline.style.color = accent;
+        dynamicCtaBtn.style.backgroundColor = accent;
+        const offerDiv = document.querySelector('.offer');
+        if(offerDiv) offerDiv.style.backgroundColor = `${accent}1A`;
+        const headerBorder = document.querySelector('.logo-header');
+        if(headerBorder) headerBorder.style.borderBottomColor = accent;
+        adContentDiv.style.fontFamily = fontSelect.value;
+        updateContentBgOpacity();
+    }
+
+    function updateTextFields() {
+        dynamicHeadline.innerText = headlineInput.value || "СТРОИТЕЛЬ.ПРО";
+        dynamicDesc.innerText = descInput.value || "";
+        updateFeaturesList();
+        dynamicOffer.innerText = offerInput.value || "🔥 Акция";
+        dynamicCtaBtn.innerText = ctaTextInput.value || "Узнать";
+        dynamicFooter.innerText = footerInput.value || "";
+        let link = ctaLinkInput.value.trim();
+        if(link && !link.startsWith('http')) link = 'https://'+link;
+        dynamicCtaBtn.href = link || "#";
+    }
+
+    function updateLayout() {
+        const layout = layoutSelect.value;
+        const logoImg = dynamicLogo;
+        const qrBlock = document.querySelector('.qr-wrapper');
+        if(layout === 'left-right') {
+            logoHeader.style.justifyContent = 'space-between';
+            logoImg.style.order = '1';
+            qrBlock.style.order = '2';
+        } else if(layout === 'right-left') {
+            logoHeader.style.justifyContent = 'space-between';
+            logoImg.style.order = '2';
+            qrBlock.style.order = '1';
+        } else if(layout === 'center-center') {
+            logoHeader.style.justifyContent = 'center';
+            logoImg.style.margin = '0 12px';
+            qrBlock.style.margin = '0 12px';
+        }
+    }
+
+    function updateHeadlineAlign() { dynamicHeadline.style.textAlign = headlineAlign.value; }
+    function updateCtaAlign() { ctaSection.style.justifyContent = 'flex-start'; }
+
+    function refreshAll() {
+        updateTextFields();
+        refreshQR();
+        updateColorsAndStyles();
+        updateLayout();
+        updateHeadlineAlign();
+        updateCtaAlign();
+        updateBackgroundImage();
+    }
+
+    // QR режим переключения
+    qrModeSelect.addEventListener('change', () => {
+        if(qrModeSelect.value === 'upload') {
+            qrGenerateBlock.style.display = 'none';
+            qrUploadBlock.style.display = 'block';
+        } else {
+            qrGenerateBlock.style.display = 'block';
+            qrUploadBlock.style.display = 'none';
+            refreshQR();
+        }
+    });
+    document.getElementById('qrUploadTrigger')?.addEventListener('click', () => qrImageInput.click());
+    qrImageInput.addEventListener('change', (e) => {
+        if(e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                customQrDataUrl = ev.target.result;
+                customQrPreview.src = customQrDataUrl;
+                customQrPreview.style.display = 'block';
+                resetQrBtn.style.display = 'inline-block';
+                refreshQR();
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+    resetQrBtn.addEventListener('click', () => {
+        customQrDataUrl = null;
+        customQrPreview.style.display = 'none';
+        resetQrBtn.style.display = 'none';
+        qrModeSelect.value = 'generate';
+        qrGenerateBlock.style.display = 'block';
+        qrUploadBlock.style.display = 'none';
+        refreshQR();
+    });
+
+    // Фон изображения
+    document.getElementById('bgUploadTrigger').addEventListener('click', () => bgImageInput.click());
+    bgImageInput.addEventListener('change', (e) => {
+        if(e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload
