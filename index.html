@@ -613,4 +613,69 @@
     bgImageInput.addEventListener('change', (e) => {
         if(e.target.files[0]) {
             const reader = new FileReader();
-            reader.onload
+            reader.onload = (ev) => {
+                backgroundImageUrl = ev.target.result;
+                bgPreviewImg.src = backgroundImageUrl;
+                bgPreviewImg.style.display = 'block';
+                resetBgBtn.style.display = 'inline-block';
+                updateBackgroundImage();
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+    resetBgBtn.addEventListener('click', () => {
+        backgroundImageUrl = null;
+        bgPreviewImg.style.display = 'none';
+        resetBgBtn.style.display = 'none';
+        bgImageLayer.style.backgroundImage = 'none';
+        bgImageLayer.style.display = 'none';
+    });
+    bgImageOpacity.addEventListener('input', updateBackgroundImage);
+    bgSizeSelect.addEventListener('change', updateBackgroundImage);
+    bgPositionSelect.addEventListener('change', updateBackgroundImage);
+
+    // Логотип
+    document.getElementById('logoUploadTrigger').addEventListener('click', () => logoInput.click());
+    logoInput.addEventListener('change', (e) => { if(e.target.files[0]) { const r=new FileReader(); r.onload=(ev)=>{ logoPreview.src=ev.target.result; dynamicLogo.src=ev.target.result; }; r.readAsDataURL(e.target.files[0]); } });
+    resetLogoBtn.addEventListener('click', () => { logoPreview.src=defaultLogo; dynamicLogo.src=defaultLogo; });
+
+    // Шаблоны
+    templateBtns.forEach((btn, idx) => {
+        btn.addEventListener('click', () => {
+            templateBtns.forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTemplate = idx;
+            applyTemplate(currentTemplate);
+        });
+    });
+    resetAllBtn.addEventListener('click', () => applyTemplate(currentTemplate));
+    contentBgOpacity.addEventListener('input', updateContentBgOpacity);
+
+    // События
+    headlineInput.addEventListener('input', refreshAll);
+    descInput.addEventListener('input', refreshAll);
+    featuresInput.addEventListener('input', updateFeaturesList);
+    offerInput.addEventListener('input', refreshAll);
+    ctaTextInput.addEventListener('input', refreshAll);
+    ctaLinkInput.addEventListener('input', refreshAll);
+    footerInput.addEventListener('input', refreshAll);
+    qrUrlInput.addEventListener('input', refreshQR);
+    accentColor.addEventListener('input', updateColorsAndStyles);
+    fontSelect.addEventListener('change', updateColorsAndStyles);
+    layoutSelect.addEventListener('change', updateLayout);
+    headlineAlign.addEventListener('change', updateHeadlineAlign);
+    printBtn.addEventListener('click', () => window.print());
+
+    // Сохранение/загрузка
+    function saveSettings() { localStorage.setItem('stroipro_full', JSON.stringify({headline:headlineInput.value, desc:descInput.value, features:featuresInput.value, offer:offerInput.value, ctaText:ctaTextInput.value, ctaLink:ctaLinkInput.value, footer:footerInput.value, qrUrl:qrUrlInput.value, accent:accentColor.value, font:fontSelect.value, layout:layoutSelect.value, headlineAlign:headlineAlign.value, bgOpacity:bgImageOpacity.value, bgSize:bgSizeSelect.value, bgPosition:bgPositionSelect.value, contentBgOpacity:contentBgOpacity.value })); }
+    window.addEventListener('beforeunload', saveSettings);
+    
+    // PWA
+    let deferredPrompt;
+    const installBtn = document.getElementById('installPwaBtn');
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; installBtn.style.display = 'flex'; });
+    installBtn.addEventListener('click', async () => { if(deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; installBtn.style.display = 'none'; } else alert("Установите через меню браузера"); });
+    refreshAll();
+</script>
+</body>
+</html>
